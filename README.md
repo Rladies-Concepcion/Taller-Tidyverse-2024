@@ -7,7 +7,7 @@ REQUERIMIENTOS
 Solo necesitas tener instalado el Tidyverse: > install.packages("tidyverse")
 
 CÓDIGO DE CONDUCTA
-Al inscribirte en este y otros evento estás aceptando nuestro código de conducta: https://guide.rladies.org/about/coc/#spanish 
+Al inscribirte en este y otros eventos estás aceptando nuestro código de conducta: https://guide.rladies.org/about/coc/#spanish 
 
 Te esperamos en nuestros siguientes talleres!!!
 
