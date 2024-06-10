@@ -1,0 +1,94 @@
+#########################################
+####### Introducción al tidyverse ########
+##########################################
+
+## para que sirve o que es Tidyverse?
+### Tidyevrse es un conjunto de paquetes en R diseñados para ciencia de datos.
+###la ciencia de datos tiene 4 pilares u objetivos principales, los que son 
+###1.Manipular
+###2.Transformar
+###3.Explorar
+###4.Visualizar
+###las funciones de Tidyverse, fueron creadas para cubrir estos objetivos y para trabajar en conjunto.
+
+#### Algunas de las funciones que utilizaremos hoy son:
+
+#'* filter() -> filtra las observaciones a partir de valores concreto
+#' usando expresiones lógicas ( |, &, != , ==)
+
+#'* arrange()-> reordena las filas
+#'
+#'* select() -> selecciona las variables con sus respectivos nombres
+#'
+#'* mutate() -> crear nuevas variables a partir de las existentes
+#'
+#'* sumarize()-> colapsa valores seleccionados para dar un resumen 
+#' de los mismos (media, rango, la mediana, la sd)
+#' 
+#'* group_by -> opera la función a la que acompaña grupo a grupo
+#'
+#'* ggplot -> para graficar nuestros datos
+#'
+#' str_sub -> extrae o reemplaza los elementos en una sola posición en cada cadena.
+#'  [str_sub_all() le permite extraer cadenas en múltiples elementos en cada cadena.]
+#'  
+#'  str_pad() -> "arreglar" el largo de nuestra cadena de caracteres dependiendo de neustras necesidades.
+
+library(tidyverse)
+library(feather)
+library(haven)
+library(janitor)
+library(openxlsx)
+
+
+##### Villa Alemana 5804
+va <- read_feather("data/Microdato_Censo2017-Personas.csv")%>% 
+  clean_names()
+
+va_h <- read_dta("data/Microdato_Censo2017-Hogares.dta")  %>% 
+  clean_names()
+
+va_v <- read.csv("data/Microdato_Censo2017-Viviendas.csv", sep =",")  %>% 
+  clean_names()
+
+### Vamos a trabajar con Chillán 
+
+#' Imaginemos que llega una SAIP en la que nos piden algunas
+#' distribuciones de personas, como sexo y edad: 
+
+chillan_p <-  va %>% 
+  filter(comuna == 16101) %>% 
+  mutate(sexo = case_when(p08 == 1   ~ "Hombre", 
+                          p08 == 2 ~ "Mujer"),
+         edad_agr = case_when(
+           p09 <=14 ~ "0 a 14", 
+           p09 >14 & p09<= 64 ~ "15 a 64", 
+           p09 >64 ~ "65 o más"))
+
+glimpse(chillan_p)
+
+pob_sexo <- chillan_p %>% 
+  group_by(sexo) %>% 
+  summarize(conteo = n()) %>% 
+  mutate(porcentaje = scales::percent(conteo / sum(conteo), accuracy = 0.01))
+
+pob_edad <- chillan_p  %>% 
+  group_by(edad_agr)%>% 
+  summarize(conteo = n()) %>% 
+    mutate(porcentaje = scales::percent(conteo / sum(conteo), accuracy = 0.01))
+
+#### Exportar las tablas
+
+# Crear un archivo Excel
+wb <- createWorkbook()
+
+# Agregar tabla1 a la primera hoja de trabajo
+addWorksheet(wb, sheetName = "Sexo")
+writeData(wb, sheet = 1, x = pob_sexo)
+
+# Agregar tabla2 a la segunda hoja de trabajo
+addWorksheet(wb, sheetName = "Edad agregada")
+writeData(wb, sheet = 2, x = pob_edad)
+
+
+saveWorkbook(wb, "output/tablas_chillan.xlsx")
